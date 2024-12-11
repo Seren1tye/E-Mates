@@ -7,7 +7,7 @@ import java.util.Scanner;
 
 public class loan{
     
-    private static final String url = "jdbc:mysql://localhost:3306/testing";
+    private static final String url = "jdbc:mysql://localhost:3306/loan";
     private static final String user = "root";
     private static final String pass = "password";
     static Scanner sc = new Scanner(System.in);

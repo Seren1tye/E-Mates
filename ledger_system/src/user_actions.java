@@ -7,23 +7,40 @@ public class user_actions {
             
             try{
                 Connection connection = DB.Connect();
-                        Scanner scanner = new Scanner(System.in);
-
-            // User input
-            System.out.print("Enter your name: ");
+                          Scanner scanner = new Scanner(System.in);
+                                      System.out.print("Enter your name: ");
             String name = scanner.nextLine();
+
+            // Validate name (alphanumeric check)
+            if (!name.matches("[a-zA-Z0-9\\s]+")) {
+                System.out.println("Error: Name must be alphanumeric and cannot contain special characters.");
+                return;
+            }
 
             System.out.print("Enter your email: ");
             String email = scanner.nextLine();
 
+            // Validate email format
+            if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+                System.out.println("Error: Invalid email format.");
+                return;
+            }
+
             System.out.print("Enter your password: ");
             String pass = scanner.nextLine();
+
+            // Validate password complexity
+            if (pass.length() < 8) {
+                System.out.println("Error: Password must be at least 8 characters long.");
+                return;
+            }
 
             System.out.print("Confirm your password: ");
             String confirmPass = scanner.nextLine();
 
+            // Check if passwords match
             if (!pass.equals(confirmPass)) {
-                System.out.println("Passwords do not match!");
+                System.out.println("Error: Passwords do not match!");
                 return;
             }
 
@@ -40,7 +57,8 @@ public class user_actions {
             if (rowsInserted > 0) {
                 System.out.println("Registration successful!");
             }
-            }catch(SQLException e){
+                }
+            catch(SQLException e){
                 System.out.println(e);
             }
             

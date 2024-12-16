@@ -1,0 +1,12 @@
+CREATE DATABASE IF NOT EXISTS Ledger;
+USE Ledger;
+
+-- Create the Transactions table
+CREATE TABLE IF NOT EXISTS Transactions (
+    transaction_id INT AUTO_INCREMENT PRIMARY KEY, -- Unique ID for each transaction
+    user_id INT NOT NULL,                          -- ID of the user performing the transaction
+    amount DECIMAL(10, 2) NOT NULL,                -- Transaction amount (positive for debit, negative for credit)
+    description VARCHAR(255) NOT NULL,            -- Description of the transaction
+    transaction_date DATETIME DEFAULT CURRENT_TIMESTAMP, -- Date and time of the transaction
+    transaction_type ENUM('debit', 'credit') NOT NULL -- Type of transaction ('debit' or 'credit')
+);

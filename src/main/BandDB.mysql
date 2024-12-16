@@ -1,0 +1,16 @@
+CREATE DATABASE BankDB;
+USE BankDB;
+
+CREATE TABLE Transactions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    date DATE NOT NULL,
+    description VARCHAR(255) NOT NULL,
+    debit DECIMAL(10, 2),
+    credit DECIMAL(10, 2),
+    balance DECIMAL(10, 2)
+);
+
+INSERT INTO Transactions (date, description, debit, credit, balance)
+VALUES
+('2024-10-08', 'Living Expense', 1300.50, 0.00, 1300.50),
+('2024-10-25', 'Rental Fee', 240.57, 0.00, 1059.93);

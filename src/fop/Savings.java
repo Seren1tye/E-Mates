@@ -44,7 +44,7 @@ public class Savings {
                     }
                 }
                 else{
-                    System.out.println("username not found");
+                    System.out.println("User ID not found");
                 }
             }
             
@@ -56,7 +56,7 @@ public class Savings {
     }
     
     private static void activateSavings (Scanner keyboard, Connection conn, int user_id) throws SQLException{
-        System.out.print("\n==Savings==\nAre you sure you want to activate it? (Y/N)");
+        System.out.print("\n==Savings==\nAre you sure you want to activate it? (Y/N): ");
         String option = keyboard.next();
         
         if(option.equalsIgnoreCase("Y")){
@@ -76,18 +76,6 @@ public class Savings {
         }
         else {
             System.out.println("Savings activation cancelled.");
-        }
-    }
-    
-    private static int userId(Connection conn, String username) throws SQLException{
-        String query = "SELECT user_id FROM Balance WHERE username = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(query)){
-            stmt.setString(1, username);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()){
-                return rs.getInt("user_id");
-            }
-            return -1;
         }
     }
 }

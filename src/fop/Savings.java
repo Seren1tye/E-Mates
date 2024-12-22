@@ -10,6 +10,7 @@ public class Savings {
     
     public static void main (String[] args){
         Scanner keyboard = new Scanner(System.in); 
+        System.out.println("hi");
         int user_id = 1;
 
         try (Connection conn = DriverManager.getConnection(url, user, password)){

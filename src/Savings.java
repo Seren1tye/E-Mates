@@ -9,6 +9,8 @@ public class Savings {
 
     // Method to activate savings
     public static void activateSavings(int userId) {
+        if(SavingTransfer.verify(userId))
+            return;
         Scanner scanner = new Scanner(System.in);
         try {
             System.out.println("== Savings Activation ==");

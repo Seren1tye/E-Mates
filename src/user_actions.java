@@ -15,7 +15,7 @@ public class user_actions {
             String name = scanner.nextLine();
 
             if (!name.matches("[a-zA-Z0-9\\s]+")) {
-                System.out.println("Error: Name must be alphanumeric and cannot contain special characters.");
+                System.out.println("\nError: Name must be alphanumeric and cannot contain special characters.\n");
                 return;
             }
 
@@ -34,7 +34,7 @@ public class user_actions {
             resultSet.next();
 
             if (resultSet.getInt(1) > 0) {
-                System.out.println("Error: This email is already registered.");
+                System.out.println("\nError: This email is already registered.\n");
                 return;
             }
 
@@ -42,7 +42,7 @@ public class user_actions {
             String pass = scanner.nextLine();
 
             if (pass.length() < 8) {
-                System.out.println("Error: Password must be at least 8 characters long.");
+                System.out.println("\nError: Password must be at least 8 characters long.\n");
                 return;
             }
 
@@ -98,10 +98,10 @@ public class user_actions {
                     userId = resultSet.getInt("user_id");
                     userName = resultSet.getString("name");
                 } else {
-                    System.out.println("Invalid email or password.");
+                    System.out.println("\nInvalid email or password.\n");
                 }
             } else {
-                System.out.println("Invalid email or password.");
+                System.out.println("\nInvalid email or password.\n");
             }
         } catch (SQLException e) {
             System.out.println("Error during login.");

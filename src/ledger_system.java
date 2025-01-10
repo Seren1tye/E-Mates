@@ -132,4 +132,3 @@ private static void transactionsMenu(int userId, String userName) {
 }
 
 }
-

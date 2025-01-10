@@ -3,27 +3,28 @@ import java.util.Scanner;
 
 public class DebitCredit {
 
-    public static double getBalance(int userId) {
-        double balance = 0.0;
-        Connection connection = DB.Connect();
-        if (connection == null) {
-            System.out.println("Failed to connect to the database.");
-            return balance;
-        }
-
-        String sql = "SELECT current_amount AS balance FROM Balance WHERE user_id = ?";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, userId);
-            try (ResultSet result = statement.executeQuery()) {
-                if (result.next()) {
-                    balance = result.getDouble("balance");
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println("Error fetching balance: " + e.getMessage());
-        }
+public static double getBalance(int userId) {
+    double balance = 0.0;
+    Connection connection = DB.Connect();
+    if (connection == null) {
+        System.out.println("Failed to connect to the database.");
         return balance;
     }
+
+    String sql = "SELECT current_amount AS balance FROM Balance WHERE user_id = ?";
+    try (PreparedStatement statement = connection.prepareStatement(sql)) {
+        statement.setInt(1, userId);
+        try (ResultSet result = statement.executeQuery()) {
+            if (result.next()) {
+                balance = result.getDouble("balance");
+            }
+        }
+    } catch (SQLException e) {
+        System.out.println("Error fetching balance: " + e.getMessage());
+    }
+    return balance;
+}
+
 
     private static void updateBalance(int userId, double newBalance) {
         String sql = "UPDATE Balance SET current_amount = ? WHERE user_id = ?";

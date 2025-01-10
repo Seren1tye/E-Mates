@@ -39,9 +39,9 @@ CREATE TABLE IF NOT EXISTS Savings (
     user_id INT NOT NULL,
     amount DECIMAL(10, 2) DEFAULT 0.00,
     activation_date DATE,  -- New column to store the activation date
+    transfer_date DATE,
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
 );
-
 
 -- Create the SavingsSettings table
 CREATE TABLE IF NOT EXISTS SavingsSettings (
@@ -56,16 +56,6 @@ CREATE TABLE IF NOT EXISTS BankDetails (
     bank_name VARCHAR(255) NOT NULL,
     interest_rate DECIMAL(5, 4) NOT NULL
 );
-
--- Insert sample data into BankDetails
-INSERT INTO BankDetails (bank_id, bank_name, interest_rate)
-VALUES
-    (1, 'RHB', 0.026), 
-    (2, 'Maybank', 0.025),  
-    (3, 'Hong Leong', 0.023),  
-    (4, 'Alliance', 0.0285),   
-    (5, 'AmBank', 0.0255),   
-    (6, 'Standard Chartered', 0.0265);
 
 -- Create the LoanDetails table
 CREATE TABLE IF NOT EXISTS LoanDetails (
@@ -104,6 +94,41 @@ BEGIN
     -- Insert a new record into the Balance table with a default amount of 0
     INSERT INTO Balance (user_id, current_amount)
     VALUES (NEW.user_id, 0.00);
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+
+-- Enable the event scheduler
+SET GLOBAL event_scheduler = ON;
+
+-- Create event to transfer savings to balance on the first day of the next month
+CREATE EVENT IF NOT EXISTS transfer_savings_to_balance
+ON SCHEDULE EVERY 1 MONTH
+STARTS (CURRENT_DATE + INTERVAL 1 - DAY(CURRENT_DATE) DAY)  -- First day of the next month
+DO
+BEGIN
+    -- Transfer savings to balance for users whose transfer_date is due
+    UPDATE Balance b
+    INNER JOIN Savings s ON b.user_id = s.user_id
+    SET 
+        b.current_amount = b.current_amount + s.amount,  -- Add savings to balance
+        s.amount = 0,                                    -- Reset savings amount
+        s.transfer_date = DATE_ADD(s.transfer_date, INTERVAL 1 MONTH)  -- Set next transfer date
+    WHERE s.transfer_date <= CURRENT_DATE AND s.amount > 0;  -- Only process due savings
+
+    -- Log the credit transaction in the Transactions table
+    INSERT INTO Transactions (user_id, description, credit, balance, transaction_type)
+    SELECT 
+        s.user_id,
+        'Savings Transfer',
+        s.amount,  -- Amount transferred
+        b.current_amount + s.amount,  -- Updated balance after transfer
+        'credit'  -- Transaction type as 'credit'
+    FROM Savings s
+    INNER JOIN Balance b ON s.user_id = b.user_id
+    WHERE s.transfer_date <= CURRENT_DATE AND s.amount > 0; -- Only log transactions for due transfers
 END$$
 
 DELIMITER ;

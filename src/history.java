@@ -300,8 +300,8 @@ public class history {
         
         // Create a bar chart using XChart
         CategoryChart chart = new CategoryChartBuilder()
-                .width(1000)
-                .height(800)
+                .width(800)
+                .height(600)
                 .title("Spending Trends")
                 .xAxisTitle("Date")
                 .yAxisTitle("Amount")
@@ -322,10 +322,11 @@ public class history {
     }
     
     private static void displaySavingsGrowth(int userId) {
-        ArrayList<String> activationDates = new ArrayList<>();
+        ArrayList<String> transferDates = new ArrayList<>();
         ArrayList<Double> savingsAmounts = new ArrayList<>();
 
-        String query = "SELECT activation_date, amount FROM Savings WHERE user_id = ? ORDER BY activation_date ASC";
+        // Query to get the transfer_date and amount from the Savings table
+        String query = "SELECT transfer_date, amount FROM Savings WHERE user_id = ? ORDER BY transfer_date ASC";
 
         try (Connection conn = DB.Connect();
              PreparedStatement statement = conn.prepareStatement(query)) {
@@ -337,11 +338,11 @@ public class history {
 
                 while (rs.next()) {
                     hasData = true;
-                    String activationDate = rs.getString("activation_date");
+                    String transferDate = rs.getString("transfer_date");
                     double amount = rs.getDouble("amount");
 
-                    if (activationDate != null && !activationDate.isEmpty()) {
-                        activationDates.add(activationDate);  // Store the date as String
+                    if (transferDate != null && !transferDate.isEmpty()) {
+                        transferDates.add(transferDate);  // Store the transfer date as String
                         savingsAmounts.add(amount);  // Store the savings amount as Double
                     }
                 }
@@ -356,8 +357,8 @@ public class history {
             return;
         }
 
-        // Ensure the activationDates and savingsAmounts lists have the same size
-        if (activationDates.isEmpty() || savingsAmounts.isEmpty()) {
+        // Ensure the transferDates and savingsAmounts lists have the same size
+        if (transferDates.isEmpty() || savingsAmounts.isEmpty()) {
             System.out.println("No valid savings data available for visualization.");
             return;
         }
@@ -367,12 +368,12 @@ public class history {
                 .width(800)
                 .height(600)
                 .title("Savings Growth Over Time")
-                .xAxisTitle("Activation Date")
+                .xAxisTitle("Transfer Date")
                 .yAxisTitle("Savings Amount")
                 .build();
 
         // Add series to the chart
-        chart.addSeries("Savings Growth", activationDates, savingsAmounts);
+        chart.addSeries("Savings Growth", transferDates, savingsAmounts);
 
         // Display the chart in a JFrame
         JFrame frame = new JFrame("Savings Growth");
@@ -384,6 +385,7 @@ public class history {
 
         System.out.println("The savings growth chart is displayed. You can close the chart window to return to the menu.");
     }
+
 
 
     private static void displayLoanRepayments(int userId) {

@@ -2,8 +2,9 @@ import java.sql.*;
 import java.util.Scanner;
 import java.util.*;
 import java.util.concurrent.*;
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 
-// CHANGE LAPTOP DATE
 public class Savings {
 
     // Method to activate savings
@@ -28,19 +29,23 @@ public class Savings {
                 double percentage;
                 // do-while loop to accept a valid percentage in between 1 - 100
                 do {
-                    System.out.print("Please enter the percentage you wish to deduct from the next debit (1-100): ");
+                    System.out.print("Please enter the percentage you wish to deduct from the next debit (1-99): ");
                     while (!scanner.hasNextDouble()) {
-                        System.out.println("Invalid input. Please enter a number between 1 and 100.");
+                        System.out.println("Invalid input. Please enter a number between 1 and 99.");
                         scanner.next();
                     }
                     percentage = scanner.nextDouble();
                     scanner.nextLine();
 
                     if (percentage <= 0 || percentage >= 100) {
-                        System.out.println("Invalid percentage. Please enter a valid percentage between 1 and 100.");
+                        System.out.println("Invalid percentage. Please enter a valid percentage between 1 and 99.");
                     }
                 } while (percentage <= 0 || percentage >= 100);
-
+                
+                // Calculate transfer_date
+                LocalDate now = LocalDate.now();
+                LocalDate transferDate = now.with(TemporalAdjusters.lastDayOfMonth()); // Last day of current month
+                
                 // Query for SQL
                 String savingsPercentageQuery = """
                     INSERT INTO SavingsSettings (user_id, percentage)
@@ -52,6 +57,21 @@ public class Savings {
                     statement.setInt(1, userId);
                     statement.setDouble(2, percentage);
                     statement.setDouble(3, percentage);
+                    statement.executeUpdate();
+                    System.out.println("Savings settings updated successfully!");
+                }
+                
+                // Set initial transfer date to last day of current month
+                String savingsQuery = """
+                    INSERT INTO Savings (user_id, amount, transfer_date, activation_date)
+                    VALUES (?, 0, ?, CURDATE())
+                    ON DUPLICATE KEY UPDATE transfer_date = ?;
+                """;
+
+                try (PreparedStatement statement = DB.Connect().prepareStatement(savingsQuery)) {
+                    statement.setInt(1, userId);
+                    statement.setDate(2, java.sql.Date.valueOf(transferDate));  // Set transfer date to last day of current month
+                    statement.setDate(3, java.sql.Date.valueOf(transferDate));  // Update transfer date if exists
                     statement.executeUpdate();
                     System.out.println("Savings settings updated successfully!");
                 }
@@ -77,7 +97,6 @@ public class Savings {
         }
     }
 
-
     // Method to get savings percentage
     public static double getSavingPercentage(int userId) {
         // initial percentage is at 0
@@ -102,16 +121,26 @@ public class Savings {
     // Method to calculate and save a percentage of the debit amount to savings
     public static double saveDebit(int userId, double savingsAmount) {
         try {
+            // Calculate transfer date as the last day of the current month
+            LocalDate now = LocalDate.now();
+            LocalDate transferDate = now.with(TemporalAdjusters.lastDayOfMonth()); // Last day of current month
+
+            // SQL query to insert/update savings
             String updateSavingsQuery = """
-                INSERT INTO Savings (user_id, amount)
-                VALUES (?, ?)
-                ON DUPLICATE KEY UPDATE amount = amount + ?;
+                INSERT INTO Savings (user_id, amount, transfer_date) 
+                VALUES (?, ?, ?) 
+                ON DUPLICATE KEY UPDATE 
+                    amount = amount + ?, 
+                    transfer_date = IFNULL(transfer_date, ?);
             """;
 
+            // Prepare and execute the statement
             try (PreparedStatement statement = DB.Connect().prepareStatement(updateSavingsQuery)) {
                 statement.setInt(1, userId);
                 statement.setDouble(2, savingsAmount);
-                statement.setDouble(3, savingsAmount);
+                statement.setDate(3, java.sql.Date.valueOf(transferDate));  // Set transfer date to last day of current month
+                statement.setDouble(4, savingsAmount);
+                statement.setDate(5, java.sql.Date.valueOf(transferDate));  // Update transfer date if exists
                 statement.executeUpdate();
                 System.out.println("Savings of " + savingsAmount + " successfully added.");
             }
@@ -120,6 +149,7 @@ public class Savings {
         }
         return savingsAmount;
     }
+
 
     // Method to view total savings
     public static double viewSavings(int userId) {
@@ -145,81 +175,116 @@ public class Savings {
     // Method to transfer savings to the balance at the end of the month
     public static void transferToBalance(int userId) {
         try {
-            // Get the total savings
-            double totalSavings = viewSavings(userId);
+            String savingsQuery = "SELECT amount, transfer_date FROM Savings WHERE user_id = ?";
+            try (PreparedStatement statement = DB.Connect().prepareStatement(savingsQuery)) {
+                statement.setInt(1, userId);
+                ResultSet rs = statement.executeQuery();
 
-            if (totalSavings > 0) {
-                // Update the user's balance by adding the savings
-                String updateBalanceQuery = "UPDATE Balance SET current_amount = current_amount + ? WHERE user_id = ?";
+                if (rs.next()) {
+                    double totalSavings = rs.getDouble("amount");
+                    java.sql.Date transferDate = rs.getDate("transfer_date"); // Use java.sql.Date here
+                    java.util.Date currentDate = new java.util.Date(); // Use java.util.Date here
 
-                try (PreparedStatement balanceStmt = DB.Connect().prepareStatement(updateBalanceQuery)) {
-                    balanceStmt.setDouble(1, totalSavings);
-                    balanceStmt.setInt(2, userId);
-                    balanceStmt.executeUpdate();
+                    // Calculate the last day of the current month
+                    LocalDate now = LocalDate.now();
+                    LocalDate lastDayOfMonth = now.with(TemporalAdjusters.lastDayOfMonth());
+
+                    // Check if transfer date has been reached
+                    if (!currentDate.before(java.sql.Date.valueOf(lastDayOfMonth))) {
+                        if (totalSavings > 0) {
+                            // Update user's balance
+                            String updateBalanceQuery = "UPDATE Balance SET current_amount = current_amount + ? WHERE user_id = ?";
+                            try (PreparedStatement balanceStmt = DB.Connect().prepareStatement(updateBalanceQuery)) {
+                                balanceStmt.setDouble(1, totalSavings);
+                                balanceStmt.setInt(2, userId);
+                                balanceStmt.executeUpdate();
+                            }
+
+                            // Record the transaction
+                            String recordTransactionQuery = """
+                                INSERT INTO Transactions (user_id, description, credit, balance, transaction_type)
+                                VALUES (?, 'Savings Transfer', ?, ?, 'credit');
+                            """;
+                            try (PreparedStatement transactionStmt = DB.Connect().prepareStatement(recordTransactionQuery)) {
+                                transactionStmt.setInt(1, userId);
+                                transactionStmt.setDouble(2, totalSavings);
+                                transactionStmt.setDouble(3, totalSavings); // Assuming balance is updated immediately
+                                transactionStmt.executeUpdate();
+                            }
+
+                            // Reset savings amount and update transfer_date
+                            String resetSavingsQuery = """
+                                UPDATE Savings 
+                                SET amount = 0, transfer_date = ?
+                                WHERE user_id = ?;
+                            """;
+                            try (PreparedStatement resetStmt = DB.Connect().prepareStatement(resetSavingsQuery)) {
+                                resetStmt.setDate(1, java.sql.Date.valueOf(lastDayOfMonth)); // Set the last day of current month
+                                resetStmt.setInt(2, userId);
+                                resetStmt.executeUpdate();
+                                System.out.println("Savings of " + totalSavings + " successfully transferred to your balance.");
+                            }
+                        } else {
+                            System.out.println("No savings to transfer.");
+                        }
+                    } else {
+                        System.out.println("Transfer date has not been reached yet.");
+                    }
                 }
-
-                // Reset the user's savings to 0
-                String resetSavingsQuery = "DELETE FROM Savings WHERE user_id = ?";
-
-                try (PreparedStatement savingsStmt = DB.Connect().prepareStatement(resetSavingsQuery)) {
-                    savingsStmt.setInt(1, userId);
-                    savingsStmt.executeUpdate();
-                }
-
-                System.out.println("Savings of " + totalSavings + " successfully transferred to your balance.");
-            } else {
-                System.out.println("No savings to transfer.");
             }
+
         } catch (SQLException e) {
             System.out.println("An error occurred during the savings transfer: " + e.getMessage());
         }
     }
+}
 
+    // This is done on SQL
+    
     // Method to transfer the amount in savings into the user's balance at the end of the month
-    public static void monthlySavingsTransfer() {
-        // Executor service to execute tasks on a schedule
-        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+//    public static void monthlySavingsTransfer() {
+//        // Executor service to execute tasks on a schedule
+//        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+//
+//        // Calculate the delay until the first day of the next month at midnight
+//        LocalDate now = LocalDate.now();
+//        LocalDate nextMonthFirstDay = now.plusMonths(1).withDayOfMonth(1);
+//        long initialDelay = java.time.Duration.between(now.atStartOfDay(), nextMonthFirstDay.atStartOfDay()).toMillis();
+//
+//        // Schedule the task to run at the first day of every month at midnight
+//        scheduler.scheduleAtFixedRate(() -> {
+//            try {
+//                System.out.println("Scheduled task started at: " + new java.util.Date());
+//                transferSavingsToBalance(); // Ensure this method is properly transferring savings
+//                System.out.println("Scheduled task completed at: " + new java.util.Date());
+//            } catch (Exception e) {
+//                System.out.println("Error during scheduled savings transfer: " + e.getMessage());
+//                e.printStackTrace();
+//            }
+//        }, initialDelay, TimeUnit.DAYS.toMillis(1), TimeUnit.MILLISECONDS); // Run daily for better accuracy
+//
+//        // Prevent the scheduler from shutting down immediately
+//        try {
+//            Thread.sleep(Long.MAX_VALUE);
+//        } catch (InterruptedException e) {
+//            System.out.println("Scheduler interrupted: " + e.getMessage());
+//        }
+//    }
 
-        // Calculate the delay until the first day of the next month at midnight
-        Calendar now = Calendar.getInstance();
-        Calendar nextMonth = Calendar.getInstance();
-        nextMonth.add(Calendar.MONTH, 1); // Move to the next month
-        nextMonth.set(Calendar.DAY_OF_MONTH, 1); // Set to the first day
-        nextMonth.set(Calendar.HOUR_OF_DAY, 0); // Set to midnight
-        nextMonth.set(Calendar.MINUTE, 0);
-        nextMonth.set(Calendar.SECOND, 0);
-        
-        // Calculate the initial delay until the next month's first day at midnight
-        long initialDelay = nextMonth.getTimeInMillis() - now.getTimeInMillis();
-        System.out.println("Initial delay calculated: " + initialDelay + " ms");
-
-        // Schedule the task to run at the first day of every month at midnight
-        scheduler.scheduleAtFixedRate(() -> {
-            try {
-                System.out.println("Scheduled task started at: " + new java.util.Date());
-                transferSavingsToBalance();
-                System.out.println("Scheduled task completed at: " + new java.util.Date());
-            } catch (Exception e) {
-                System.out.println("Error during scheduled savings transfer: " + e.getMessage());
-                e.printStackTrace();
-            }
-        }, initialDelay, TimeUnit.DAYS.toMillis(30), TimeUnit.MILLISECONDS);
-    }
 
     // method to transfer savings of all users to their respective balances
-    private static void transferSavingsToBalance() {
-        try {
-            String query = "SELECT user_id FROM Users";
-            try (PreparedStatement statement = DB.Connect().prepareStatement(query);
-                 ResultSet rs = statement.executeQuery()) {
-
-                while (rs.next()) {
-                    int userId = rs.getInt("user_id");
-                    transferToBalance(userId);
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println("Error fetching users for savings transfer: " + e.getMessage());
-        }
-    }
-}
+//    private static void transferSavingsToBalance() {
+//        try {
+//            String query = "SELECT user_id FROM Users";
+//            try (PreparedStatement statement = DB.Connect().prepareStatement(query);
+//                 ResultSet rs = statement.executeQuery()) {
+//
+//                while (rs.next()) {
+//                    int userId = rs.getInt("user_id");
+//                    transferToBalance(userId); // Transfers the savings for each user
+//                }
+//            }
+//        } catch (SQLException e) {
+//            System.out.println("Error fetching users for savings transfer: " + e.getMessage());
+//        }
+//    }

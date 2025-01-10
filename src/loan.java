@@ -257,7 +257,11 @@ public class loan{
             }
             double interestCopy= interest;
             interest = interest/(12.0*100.0);
-            
+
+            if(interest<=0){
+                System.out.println("Please enter a valid amount");
+                return;
+            }
         
             System.out.print("Enter period [in month(s)]: ");
             input=sc.nextLine();
@@ -265,6 +269,11 @@ public class loan{
                 period = Double.parseDouble(input);
             }catch(NumberFormatException e){
                 System.out.println("Invalid input.");
+                return;
+            }
+
+            if(period<=0){
+                System.out.println("Please enter a valid amount");
                 return;
             }
         

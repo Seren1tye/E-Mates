@@ -132,3 +132,13 @@ BEGIN
 END$$
 
 DELIMITER ;
+-- DEBUG CODE TO TEST THE END OF MONTH TRANSFER FUNCTION
+-- Add savings to balance and reset savings amount
+-- UPDATE Balance b
+-- INNER JOIN Savings s ON b.user_id = s.user_id
+-- SET 
+--     b.current_amount = b.current_amount + s.amount,  -- Add savings to the balance
+--     s.amount = 0,                                    -- Reset savings amount to 0
+--     s.transfer_date = DATE_ADD(s.transfer_date, INTERVAL 1 MONTH)  -- Set next transfer date
+-- WHERE s.transfer_date <= CURRENT_DATE               -- Only process due savings
+--   AND s.amount > 0;                                  -- Ensure that there is a non-zero savings amount

@@ -75,9 +75,9 @@ public static double getBalance(int userId) {
             read.nextLine();
 
             if (amount == 0 || amount < -1) {
-                System.out.println("Invalid amount. Please enter a positive value.\n");
+                System.out.println("\nInvalid amount. Please enter a positive value.\n");
             } else if (amount > 500000) {
-                System.out.println("Invalid amount. 500,000 is the transaction limit.\n");
+                System.out.println("\nInvalid amount. 500,000 is the transaction limit.\n");
             } else if (amount == -1) {
                 return;
             } else {
@@ -113,11 +113,11 @@ public static double getBalance(int userId) {
             double currentBalance = getBalance(userId);
 
             if (amount == 0 || amount < -1) {
-                System.out.println("Invalid amount. Please enter a positive value.\n");
+                System.out.println("\nInvalid amount. Please enter a positive value.\n");
             } else if (amount > 500000) {
-                System.out.println("Invalid amount. 500,000 is the transaction limit.\n");
+                System.out.println("\nInvalid amount. 500,000 is the transaction limit.\n");
             } else if (amount > currentBalance) {
-                System.out.println("Insufficient funds. Your current balance is: " + currentBalance + "\n");
+                System.out.println("\nInsufficient funds. Your current balance is: " + currentBalance + "\n");
             } else if (amount == -1) {
                 return;
             } else {

@@ -82,6 +82,7 @@ private static void transactionsMenu(int userId, String userName) {
         System.out.printf("Balance: %.2f\n", DebitCredit.getBalance(userId));
         System.out.printf("Savings: %.2f\n", Savings.viewSavings(userId));
         System.out.printf("Loan: %.2f\n", loan.loan(userId)); 
+        loan.reminder(userId,loan.loan(userId));
 
         System.out.println("\n=== Transactions ==="); //Display submenu
         System.out.println("1. Debit");

@@ -98,7 +98,7 @@ public static double getBalance(int userId) {
         }
 
         insertTransaction(userId, amount, description, "Debit");
-        System.out.println("Debit transaction successful!");
+        System.out.println("\nDebit transaction successful!\n");
     }
 
     public static void creditAmount(int userId, Scanner read) {
@@ -129,6 +129,6 @@ public static double getBalance(int userId) {
         String description = read.nextLine();
 
         insertTransaction(userId, amount, description, "Credit");
-        System.out.println("Credit transaction successful!\n");
+        System.out.println("\nCredit transaction successful!\n");
     }
 }

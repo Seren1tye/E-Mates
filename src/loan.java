@@ -16,7 +16,8 @@ public class loan{
                 int loan_id= loanId(user_id);
 
                 System.out.println("""
-                                   
+
+                                ==CREDIT LOAN==   
                                 1.Apply
                                 2.Repay
                                 3.Exit

@@ -1,18 +1,22 @@
-//This program will calculate the interest(daily/monthly/annually) based on the current balance and displays it.
+// This program calculates interest (daily/monthly/annually) based on the user's current balance and displays the result.
 
 import java.sql.*;
 import java.util.Scanner;
 
 public class InterestPredictor {
     
-    private static Scanner in = new Scanner(System.in);
+    private static Scanner in = new Scanner(System.in); // Scanner for user input
     
+    // Main method to manage the interest calculation process
     public static void mainInterest(int user_id) {
         String input;
-        int choice = 0;
-        double interestRate = interestRate(chooseBank());
+        int choice;
+        double interestRate = interestRate(chooseBank()); // Get initial interest rate based on chosen bank
         
         do {
+            choice = 0;
+            
+            // Display menu options for interest period selection
             System.out.println("\nChoose interest period:");
             System.out.println("1. Daily");
             System.out.println("2. Monthly");
@@ -21,14 +25,14 @@ public class InterestPredictor {
             System.out.println("5. Exit");
             System.out.print("\n> ");
             
-            input = in.nextLine();   //If input is not a number, exception message will be output
+            input = in.nextLine();   // Handle user input and exceptions for invalid input
             try{
                 choice = Integer.parseInt(input);
             } catch (NumberFormatException e) {
-                System.out.print("Input is not a number. " + e.getMessage());
+                System.out.print("Error. Please enter a number 1-5.\n");
             }
-            System.out.println();
 
+            // Process user choice and perform relevant actions
             switch(choice){
                 case 1:
                     System.out.printf("The daily interest is %.2f", calculateInterest(user_id, choice, interestRate));
@@ -46,14 +50,14 @@ public class InterestPredictor {
                     break;
 
                 case 4:
-                    interestRate = interestRate(chooseBank());
+                    interestRate = interestRate(chooseBank()); // Update interest rate based on new bank selection
                     break;
                     
                 case 5:
                     break;
 
                 default:
-                    // if number other than 1-5 is entered, print message. If input is not a number, message is not printed.
+                    // Handle invalid menu choices
                     if (Character.isDigit(input.charAt(0))) {
                         System.out.println("Invalid choice.");
                     }
@@ -61,10 +65,10 @@ public class InterestPredictor {
 
             }
 
-        } while (choice != 5);
+        } while (choice != 5); // Loop until the user chooses to exit
     }
     
-    //Method to choose bank ID
+    // Method to allow user to select a bank and return its ID
     public static int chooseBank(){
         int bankID = 0;
         String input;
@@ -73,6 +77,7 @@ public class InterestPredictor {
         
         do {
             repeat = false;
+            // Display menu options for bank selection
             System.out.println("\nChoose bank:");
             System.out.println("1. RHB");
             System.out.println("2. Maybank");
@@ -82,14 +87,14 @@ public class InterestPredictor {
             System.out.println("6. Standard Chartered");
             System.out.print("\n> ");
             
-            input = in.nextLine();  //If input is not a number, exception message will be output
+            input = in.nextLine();  // Handle user input and exceptions for invalid input
             try {
                 choice = Integer.parseInt(input);
             } catch (NumberFormatException e) {
-                System.out.print("Input is not a number. " + e.getMessage());
+                System.out.print("Error. Please enter a number 1-6.\n");
             }
-            System.out.println();
 
+            // Map user choice to corresponding bank ID
             switch (choice){
                 case 1:
                     bankID = 1;
@@ -119,79 +124,77 @@ public class InterestPredictor {
                     if (Character.isDigit(input.charAt(0))) {
                         System.out.println("Invalid choice.");
                     }
-                    repeat = true;
+                    repeat = true; // Prompt user again if input is invalid
                     break;
 
             }    
-        } while (repeat);
+        } while (repeat); // Loop until a valid choice is made
         
         return bankID;
     }
     
-    //Method to choose interest rate for bank
+    // Method to retrieve the interest rate for a given bank ID
     public static double interestRate(int bankID){
         double interestRate = 0;
         
-        try (Connection connection = DB.Connect()){
+        try (Connection connection = DB.Connect()){ // Connect to the database
             String query = "SELECT interest_rate FROM bankDetails WHERE bank_id = ?";
             PreparedStatement pstmt = connection.prepareStatement(query);
             pstmt.setDouble(1, bankID);
             
-            ResultSet rs = pstmt.executeQuery();
+            ResultSet rs = pstmt.executeQuery(); // Execute query and retrieve interest rate
             while (rs.next()){
                 interestRate = rs.getDouble("interest_rate");
             }
             
         } catch (SQLException e){
-            e.printStackTrace();
+            e.printStackTrace(); // Handle SQL exceptions
         }
         
         return interestRate;
     }
     
-    //Method to calculate interest from the balance and interest rate (daily/monthly/annually)
+    // Method to calculate interest based on balance, interest rate, and period
     public static double calculateInterest(int user_id, int period, double interestRate){
         double interest = 0;
-        double balance = getBalance(user_id);
+        double balance = getBalance(user_id); // Retrieve user's current balance
             
         switch (period){
             case 1:
-                interest = balance * interestRate / 365;
+                interest = balance * interestRate / 365; // Daily interest calculation
                 break;
 
             case 2:
-                interest = balance * interestRate / 12;
+                interest = balance * interestRate / 12; // Monthly interest calculation
                 break;
 
             case 3:
-                interest = balance * interestRate;
+                interest = balance * interestRate; // Annual interest calculation
                 break;
 
         }
         return interest;
     }
     
-    //Method to retrieve  current balance amount from database
+    // Method to retrieve the user's current balance from the database
     public static double getBalance(int user_id){
         double balance = 0;
         
-        try (Connection connection = DB.Connect()){
+        try (Connection connection = DB.Connect()){ // Connect to the database
             String query = "SELECT current_amount FROM balance WHERE user_id = ?";
             PreparedStatement pstmt = connection.prepareStatement(query);
             pstmt.setInt(1, user_id);
             
-            ResultSet rs = pstmt.executeQuery();
+            ResultSet rs = pstmt.executeQuery(); // Execute query and retrieve balance
             
             while (rs.next()){
                 balance = rs.getDouble("current_amount");
             }
             
         } catch (SQLException e){
-            e.printStackTrace();
+            e.printStackTrace(); // Handle SQL exceptions
         }
         
         return balance;
     }
 }
-    
-    

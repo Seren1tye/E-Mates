@@ -77,6 +77,7 @@ private static void transactionsMenu(int userId, String userName) {
 
     do {
         // Display user balance and personalized welcome message
+        SavingTransfer.transferMethod(userId);
         System.out.println("\n=== Welcome, " + userName + " ==="); // Display the user's name
         System.out.printf("Balance: %.2f\n", DebitCredit.getBalance(userId));
         System.out.printf("Savings: %.2f\n", Savings.viewSavings(userId));

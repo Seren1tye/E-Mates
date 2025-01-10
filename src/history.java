@@ -144,8 +144,8 @@ public class history {
                 System.out.print("Enter maximum amount: ");
                 double maxAmount = scanner.nextDouble();
                 scanner.nextLine(); // Consume newline character
-                queryBuilder.append(" AND (debit >= ").append(minAmount).append(" OR credit >= ").append(minAmount)
-                        .append(") AND (debit <= ").append(maxAmount).append(" OR credit <= ").append(maxAmount).append(")");
+                queryBuilder.append(" AND ((debit BETWEEN ").append(minAmount).append(" AND ").append(maxAmount)
+                            .append(") OR (credit BETWEEN ").append(minAmount).append(" AND ").append(maxAmount).append("))");
                 break;
             default:
                 System.out.println("Invalid filtering option. No filter applied.");
@@ -234,12 +234,13 @@ public class history {
             System.out.println("2. Savings Growth");
             System.out.println("3. Loan Repayments");
             System.out.println("4. Exit");
-
+            System.out.print("\n> ");
             // Get user input
             while (!scanner.hasNextInt()) {
                 System.out.println("Invalid input.");
                 scanner.next(); // Consume invalid input
             }
+            
             choice = scanner.nextInt();
 
             // Handle user choice
@@ -385,8 +386,6 @@ public class history {
 
         System.out.println("The savings growth chart is displayed. You can close the chart window to return to the menu.");
     }
-
-
 
     private static void displayLoanRepayments(int userId) {
         ArrayList<String> repaymentDates = new ArrayList<>();

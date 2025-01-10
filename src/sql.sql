@@ -57,6 +57,16 @@ CREATE TABLE IF NOT EXISTS BankDetails (
     interest_rate DECIMAL(5, 4) NOT NULL
 );
 
+-- Insert sample data into BankDetails
+INSERT INTO BankDetails (bank_id, bank_name, interest_rate)
+VALUES
+    (1, 'RHB', 0.026), 
+    (2, 'Maybank', 0.025),  
+    (3, 'Hong Leong', 0.023),  
+    (4, 'Alliance', 0.0285),   
+    (5, 'AmBank', 0.0255),   
+    (6, 'Standard Chartered', 0.0265);
+
 -- Create the LoanDetails table
 CREATE TABLE IF NOT EXISTS LoanDetails (
     loan_id INT AUTO_INCREMENT PRIMARY KEY,

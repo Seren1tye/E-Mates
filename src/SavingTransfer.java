@@ -32,8 +32,6 @@ public class SavingTransfer {
             if(rs1.next()){
                 transferDate = rs1.getDate("transfer_date");
             }
-            System.out.println(currentDate);
-            System.out.println(transferDate);
             if(currentDate.compareTo(transferDate)==0) {
                 return;
             } else {

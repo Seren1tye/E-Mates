@@ -82,7 +82,7 @@ private static void transactionsMenu(int userId, String userName) {
         System.out.printf("Savings: %.2f\n", Savings.viewSavings(userId));
         System.out.printf("Loan: %.2f\n", loan.loan(userId)); 
 
-        System.out.println("\n=== Transactions ===");
+        System.out.println("\n=== Transactions ==="); //Display submenu
         System.out.println("1. Debit");
         System.out.println("2. Credit");
         System.out.println("3. History");
@@ -114,13 +114,13 @@ private static void transactionsMenu(int userId, String userName) {
                     history.mainHistory(userId, userName); // Display transaction history
                 break;
             case 4:
-                    Savings.activateSavings(userId);
+                    Savings.activateSavings(userId); // Savings function
                 break;
             case 5:
-                loan.loanMethod(userId);
+                loan.loanMethod(userId); // Loan Function
                 break;
             case 6:
-                InterestPredictor.mainInterest(userId);
+                InterestPredictor.mainInterest(userId); // Predict interest
                 break;
             case 7:
                 System.out.println("Returning to Main Menu...");

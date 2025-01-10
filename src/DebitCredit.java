@@ -25,7 +25,7 @@ public static double getBalance(int userId) {
     return balance;
 }
 
-
+    //Update Balance Table
     private static void updateBalance(int userId, double newBalance) {
         String sql = "UPDATE Balance SET current_amount = ? WHERE user_id = ?";
         try (Connection connection = DB.Connect(); PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -37,6 +37,7 @@ public static double getBalance(int userId) {
         }
     }
 
+    //Add insertTransaction Row into the table
     private static void insertTransaction(int userId, double amount, String description, String type) {
         String sql = "INSERT INTO Transactions (user_id, description, debit, credit, balance, transaction_type) " +
                      "VALUES (?, ?, ?, ?, ?, ?)";
